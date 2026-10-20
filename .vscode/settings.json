@@ -1,0 +1,13 @@
+{
+  "python.defaultInterpreterPath": "${workspaceFolder}/.venv/Scripts/python.exe",
+  "python.terminal.activateEnvironment": true,
+  "python.analysis.extraPaths": ["src"],
+  "python.envFile": "${workspaceFolder}/.env",
+  "python.testing.pytestEnabled": true,
+  "python.testing.pytestArgs": ["tests"],
+  "terminal.integrated.env.windows": { "PYTHONPATH": "${workspaceFolder}/src", "PYTHONIOENCODING": "utf-8" },
+  "terminal.integrated.env.osx": { "PYTHONPATH": "${workspaceFolder}/src" },
+  "terminal.integrated.env.linux": { "PYTHONPATH": "${workspaceFolder}/src" },
+  "files.encoding": "utf8",
+  "files.exclude": { "**/__pycache__": true, ".pytest_cache": true }
+}

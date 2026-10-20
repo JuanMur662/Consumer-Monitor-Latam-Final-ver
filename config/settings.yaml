@@ -1,0 +1,20 @@
+# Rutas (relativas a la carpeta del proyecto)
+excel: excel/Monitor_Retail_LATAM.xlsx      # libro maestro: se actualiza en sitio (con respaldo previo)
+respaldos: output/respaldos                 # copia del Excel antes de cada corrida
+reportes: output/reportes                   # reporte de cada corrida (qué cambió y de dónde salió)
+raw: data/raw                               # copia de cada archivo/respuesta descargada (trazabilidad)
+store: data/store                           # series limpias en CSV (una por hoja)
+manual: data/manual_inputs.csv              # datos que quieras forzar a mano
+
+# Red
+timeout_segundos: 40
+reintentos: 3
+proxy: ""                    # p. ej. http://usuario:clave@proxy.empresa.com:8080 (o variables HTTPS_PROXY)
+certificados_sistema: true   # usa el almacén de certificados de Windows (redes con inspección SSL)
+
+# Excel
+heatmap_promedio_ultimos: 12          # el "Promedio" del heatmap = últimos 12 meses de la ventana
+escribir_historia_completa: true      # reescribe meses pasados si la fuente oficial los revisó
+noticias: true                        # construye la hoja Noticias
+resumen_llm: auto                     # auto = usa ANTHROPIC_API_KEY si existe; false = nunca
+modelo_llm: claude-sonnet-5-5

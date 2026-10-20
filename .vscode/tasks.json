@@ -1,0 +1,301 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "1. Instalar / reparar entorno (.venv + requirements)",
+      "type": "process",
+      "windows": {
+        "command": "cmd.exe",
+        "args": [
+          "/c",
+          "setup.bat"
+        ]
+      },
+      "osx": {
+        "command": "/bin/bash",
+        "args": [
+          "setup.sh"
+        ]
+      },
+      "linux": {
+        "command": "/bin/bash",
+        "args": [
+          "setup.sh"
+        ]
+      },
+      "options": {
+        "cwd": "${workspaceFolder}"
+      },
+      "presentation": {
+        "reveal": "always",
+        "panel": "dedicated"
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "Actualizar Monitor",
+      "type": "process",
+      "windows": {
+        "command": "${workspaceFolder}\\.venv\\Scripts\\python.exe",
+        "args": [
+          "-m",
+          "monitor"
+        ]
+      },
+      "osx": {
+        "command": "${workspaceFolder}/.venv/bin/python",
+        "args": [
+          "-m",
+          "monitor"
+        ]
+      },
+      "linux": {
+        "command": "${workspaceFolder}/.venv/bin/python",
+        "args": [
+          "-m",
+          "monitor"
+        ]
+      },
+      "options": {
+        "cwd": "${workspaceFolder}",
+        "env": {
+          "PYTHONPATH": "${workspaceFolder}/src",
+          "PYTHONIOENCODING": "utf-8"
+        }
+      },
+      "presentation": {
+        "reveal": "always",
+        "panel": "dedicated",
+        "clear": true
+      },
+      "problemMatcher": [],
+      "group": {
+        "kind": "build",
+        "isDefault": true
+      }
+    },
+    {
+      "label": "Vista previa (no toca el Excel maestro)",
+      "type": "process",
+      "windows": {
+        "command": "${workspaceFolder}\\.venv\\Scripts\\python.exe",
+        "args": [
+          "-m",
+          "monitor",
+          "--prueba"
+        ]
+      },
+      "osx": {
+        "command": "${workspaceFolder}/.venv/bin/python",
+        "args": [
+          "-m",
+          "monitor",
+          "--prueba"
+        ]
+      },
+      "linux": {
+        "command": "${workspaceFolder}/.venv/bin/python",
+        "args": [
+          "-m",
+          "monitor",
+          "--prueba"
+        ]
+      },
+      "options": {
+        "cwd": "${workspaceFolder}",
+        "env": {
+          "PYTHONPATH": "${workspaceFolder}/src",
+          "PYTHONIOENCODING": "utf-8"
+        }
+      },
+      "presentation": {
+        "reveal": "always",
+        "panel": "dedicated",
+        "clear": true
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "Actualizar solo datos (sin noticias)",
+      "type": "process",
+      "windows": {
+        "command": "${workspaceFolder}\\.venv\\Scripts\\python.exe",
+        "args": [
+          "-m",
+          "monitor",
+          "--sin-noticias"
+        ]
+      },
+      "osx": {
+        "command": "${workspaceFolder}/.venv/bin/python",
+        "args": [
+          "-m",
+          "monitor",
+          "--sin-noticias"
+        ]
+      },
+      "linux": {
+        "command": "${workspaceFolder}/.venv/bin/python",
+        "args": [
+          "-m",
+          "monitor",
+          "--sin-noticias"
+        ]
+      },
+      "options": {
+        "cwd": "${workspaceFolder}",
+        "env": {
+          "PYTHONPATH": "${workspaceFolder}/src",
+          "PYTHONIOENCODING": "utf-8"
+        }
+      },
+      "presentation": {
+        "reveal": "always",
+        "panel": "dedicated",
+        "clear": true
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "Diagnóstico de fuentes",
+      "type": "process",
+      "windows": {
+        "command": "${workspaceFolder}\\.venv\\Scripts\\python.exe",
+        "args": [
+          "-m",
+          "monitor",
+          "--prueba",
+          "--diagnostico"
+        ]
+      },
+      "osx": {
+        "command": "${workspaceFolder}/.venv/bin/python",
+        "args": [
+          "-m",
+          "monitor",
+          "--prueba",
+          "--diagnostico"
+        ]
+      },
+      "linux": {
+        "command": "${workspaceFolder}/.venv/bin/python",
+        "args": [
+          "-m",
+          "monitor",
+          "--prueba",
+          "--diagnostico"
+        ]
+      },
+      "options": {
+        "cwd": "${workspaceFolder}",
+        "env": {
+          "PYTHONPATH": "${workspaceFolder}/src",
+          "PYTHONIOENCODING": "utf-8"
+        }
+      },
+      "presentation": {
+        "reveal": "always",
+        "panel": "dedicated",
+        "clear": true
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "Buscar id INEGI",
+      "type": "process",
+      "windows": {
+        "command": "${workspaceFolder}\\.venv\\Scripts\\python.exe",
+        "args": [
+          "-m",
+          "monitor",
+          "buscar-inegi",
+          "${input:textoInegi}"
+        ]
+      },
+      "osx": {
+        "command": "${workspaceFolder}/.venv/bin/python",
+        "args": [
+          "-m",
+          "monitor",
+          "buscar-inegi",
+          "${input:textoInegi}"
+        ]
+      },
+      "linux": {
+        "command": "${workspaceFolder}/.venv/bin/python",
+        "args": [
+          "-m",
+          "monitor",
+          "buscar-inegi",
+          "${input:textoInegi}"
+        ]
+      },
+      "options": {
+        "cwd": "${workspaceFolder}",
+        "env": {
+          "PYTHONPATH": "${workspaceFolder}/src",
+          "PYTHONIOENCODING": "utf-8"
+        }
+      },
+      "presentation": {
+        "reveal": "always",
+        "panel": "dedicated",
+        "clear": true
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "Tests",
+      "type": "process",
+      "windows": {
+        "command": "${workspaceFolder}\\.venv\\Scripts\\python.exe",
+        "args": [
+          "-m",
+          "pytest",
+          "-q",
+          "tests"
+        ]
+      },
+      "osx": {
+        "command": "${workspaceFolder}/.venv/bin/python",
+        "args": [
+          "-m",
+          "pytest",
+          "-q",
+          "tests"
+        ]
+      },
+      "linux": {
+        "command": "${workspaceFolder}/.venv/bin/python",
+        "args": [
+          "-m",
+          "pytest",
+          "-q",
+          "tests"
+        ]
+      },
+      "options": {
+        "cwd": "${workspaceFolder}",
+        "env": {
+          "PYTHONPATH": "${workspaceFolder}/src",
+          "PYTHONIOENCODING": "utf-8"
+        }
+      },
+      "presentation": {
+        "reveal": "always",
+        "panel": "dedicated",
+        "clear": true
+      },
+      "problemMatcher": [],
+      "group": "test"
+    }
+  ],
+  "inputs": [
+    {
+      "id": "textoInegi",
+      "type": "promptString",
+      "description": "Texto a buscar en el BIE del INEGI",
+      "default": "indicador de confianza empresarial comercio"
+    }
+  ]
+}

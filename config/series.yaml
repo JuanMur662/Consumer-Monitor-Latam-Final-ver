@@ -1,0 +1,318 @@
+# =============================================================================
+#  Monitor Retail LATAM: definición de series y fuentes
+# =============================================================================
+#  Cada columna (país) de cada hoja tiene una lista de `fuentes`. En cada corrida:
+#    1. se descargan TODAS las fuentes de la lista
+#    2. cada una se transforma a la unidad del Excel y se valida contra el histórico
+#    3. gana la fuente válida con el dato más reciente (empate: la más parecida al histórico)
+#  Si ninguna pasa la validación, el Excel NO se toca para esa serie y queda en el log.
+#
+#  Transformaciones (`transform`):
+#    yoy        -> variación % a 12 meses calculada desde un índice
+#    pct        -> la fuente viene en % (3.1) y el Excel guarda fracción (0.031)
+#    auto_yoy   -> yoy si parece índice, pct si ya es variación
+#    nivel      -> sin cambios
+#    "formula:(x+100)/2" -> normalización a escala 0-100 (Colombia, Fedesarrollo)
+#    "formula:x/2"       -> normalización a escala 0-100 (Brasil, Fecomercio 0-200)
+#
+#  Tokens (gratuitos) en el archivo .env: INEGI_TOKEN, BANXICO_TOKEN, BCCH_TOKEN (opcional).
+#  Una fuente que necesita un token que no está configurado simplemente se omite.
+# =============================================================================
+
+hojas:
+
+  # ---------------------------------------------------------------------------
+  1_Actividad_Economica:
+    alias: ActEco
+    validacion: {mad_max: 0.008, rango: [-0.6, 0.9]}
+    series:
+      BRASIL:
+        nombre: IBC-Br sin ajuste estacional (BCB)
+        fuentes:
+          - {tipo: bcb_sgs, codigo: 24363, transform: yoy}
+      CHILE:
+        nombre: IMACEC (BCCh), var. 12 meses
+        fuentes:
+          - {tipo: bcch_siete, cuadro: CAP_CCNN/MN_CCNN76/CCNN2018_IMACEC_01_A, calculo: YTYPCT, fila: "^Imacec\\s*(\\d+/)?\\s*$", transform: pct}
+          - {tipo: bcch_api, codigo: F032.IMC.IND.Z.Z.EP18.Z.Z.0.M, transform: yoy, requiere: BCCH_TOKEN}
+      COLOMBIA:
+        nombre: ISE serie original (DANE)
+        fuentes:
+          - tipo: archivo_web
+            clave: dane_ise
+            etiqueta: DANE ISE (anexo)
+            pagina: https://www.dane.gov.co/index.php/estadisticas-por-tema/cuentas-nacionales/indicador-de-seguimiento-a-la-economia-ise
+            patron_enlace: 'anex-ISE-9actividades-[a-z]{3}\d{4}\.xlsx'
+            plantilla_url: 'https://www.dane.gov.co/files/operaciones/ISE/anex-ISE-9actividades-{mes}{anio}.xlsx'
+            fila_regex: 'indicador de seguimiento|^\s*ise\s*$|^\s*total\s*$|economia total'
+            excluir_regex: 'desestacionaliz|ajustad|tendencia'
+            transform: auto_yoy
+          - tipo: texto_web            # respaldo sin Excel: boletín técnico mensual (texto del PDF)
+            clave: dane_ise_bol
+            etiqueta: DANE ISE (boletín técnico)
+            plantilla_url: 'https://www.dane.gov.co/files/operaciones/ISE/bol-ISE-{mes}{anio}.pdf'
+            nombre_por: referencia
+            meses_atras: 8
+            patron: 'serie original'
+            unidad: '%'
+            rango: [-30, 40]
+            transform: pct
+      MEXICO:
+        nombre: IGAE serie original (INEGI)
+        fuentes:
+          - {tipo: inegi, id: "737121", buscar: "indicador global de la actividad economica total serie original indice", titulo_regex: "actividad econ.*base 2018.*total", excluir_regex: "desestacionaliz|tendencia|variaci|acumulad|primarias|secundarias|terciarias", transform: yoy, requiere: INEGI_TOKEN}
+      PERU:
+        nombre: Producción Nacional / PBI mensual var. % interanual (BCRP-INEI)
+        fuentes:
+          - {tipo: bcrp, codigo: PN01728AM, transform: pct}
+
+  # ---------------------------------------------------------------------------
+  2_Ventas_Retail:
+    alias: Ventas
+    validacion: {mad_max: 0.012, rango: [-0.7, 1.2]}
+    series:
+      BRASIL:
+        nombre: PMC volumen comercio minorista, var. vs mismo mes año anterior (IBGE)
+        fuentes:
+          - {tipo: ibge_sidra, tabela: 8880, variavel: 11709, classificacao: c11046/56734, transform: pct}
+      CHILE:
+        nombre: Índice de Actividad del Comercio al por menor (INE)
+        fuentes:
+          - tipo: archivo_web
+            clave: ine_cl_iac
+            etiqueta: INE Chile IAC (cuadros)
+            pagina: https://www.ine.gob.cl/estadisticas/economia/comercio-servicios-y-turismo/actividad-mensual-del-comercio
+            patron_enlace: 'series-mensuales.*\.xlsx|cuadros-estadisticos.*\.xlsx'
+            url: 'https://www.ine.gob.cl/docs/default-source/actividad-mensual-del-comercio/cuadros-estadisticos/base-promedio-año-2018-100/series-mensuales-desde-enero-de-2018-a-la-fecha.xlsx'
+            fila_regex: 'al por menor|minorista|division 47|iacm'
+            excluir_regex: 'por mayor|mayorista|automotor|vehiculo'
+            transform: auto_yoy
+      COLOMBIA:
+        nombre: EMC ventas reales comercio minorista (DANE)
+        fuentes:
+          - tipo: archivo_web
+            clave: dane_emc
+            etiqueta: DANE EMC (anexo)
+            pagina: https://www.dane.gov.co/index.php/estadisticas-por-tema/comercio-interno/encuesta-mensual-de-comercio-emc
+            patron_enlace: 'anex-EMC-ComercioMinorista-[a-z]{3}\d{4}\.xlsx'
+            plantilla_url: 'https://www.dane.gov.co/files/operaciones/EMC/anex-EMC-ComercioMinorista-{mes}{anio}.xlsx'
+            fila_regex: 'total comercio minorista|comercio minorista total|^\s*total\s*$|ventas reales'
+            excluir_regex: 'sin combustibles|sin vehiculos|nominal'
+            transform: auto_yoy
+          - tipo: texto_web
+            clave: dane_emc_bol
+            etiqueta: DANE EMC (boletín técnico)
+            plantilla_url: 'https://www.dane.gov.co/files/operaciones/EMC/bol-EMC-{mes}{anio}.pdf'
+            nombre_por: referencia
+            meses_atras: 8
+            patron: 'ventas reales del comercio minorista'
+            unidad: '%'
+            rango: [-40, 60]
+            transform: pct
+      MEXICO:
+        nombre: EMEC ingresos por suministro de bienes y servicios al por menor (INEGI)
+        fuentes:
+          - {tipo: inegi, buscar: "ingresos por suministro de bienes y servicios comercio al por menor indice", titulo_regex: "por menor.*ingresos.*suministro|ingresos.*suministro.*por menor", excluir_regex: "desestacionaliz|tendencia|por mayor|variaci", transform: yoy, requiere: INEGI_TOKEN}
+
+  # ---------------------------------------------------------------------------
+  3_Confianza_Empresarial:
+    alias: ConfEmp
+    validacion: {mad_max: 1.5, rango: [0, 100]}
+    series:
+      BRASIL:
+        nombre: ICEI (CNI)
+        fuentes:
+          - tipo: archivo_web
+            clave: cni_icei
+            etiqueta: CNI ICEI (serie reciente)
+            pagina: https://www.portaldaindustria.com.br/estatisticas/icei-indice-de-confianca-do-empresario-industrial/
+            patron_enlace: 'serierecente[^"\x27]*\.xlsx'
+            fila_regex: '^icei$|indice de confianca do empresario industrial|confianca do empresario industrial'
+            excluir_regex: 'condic|expectativ|regi|porte|setor'
+            transform: nivel
+          - tipo: texto_web            # dato del mes en el texto de la página de la CNI
+            clave: cni_icei_texto
+            etiqueta: CNI ICEI (página)
+            formato: html
+            url: https://www.portaldaindustria.com.br/estatisticas/icei-indice-de-confianca-do-empresario-industrial/
+            patron: 'ICEI'
+            unidad: puntos
+            rango: [20, 80]
+            cache_permanente: false
+            transform: nivel
+          - tipo: texto_web            # resumen mensual CNI publicado por Abinee (Indústria Geral)
+            clave: abinee_icei
+            etiqueta: CNI ICEI (resumen mensual)
+            plantilla_url: 'https://www.abinee.org.br/wp-content/uploads/{anio}/{mm}/icei{aa}{mm}.pdf'
+            nombre_por: referencia
+            meses_atras: 8
+            patron: 'Ind[uú]stria Geral'
+            unidad: puntos
+            rango: [20, 80]
+            transform: nivel
+          - {tipo: bcb_sgs, codigo: 7341, transform: nivel}   # ICEI en el SGS (frecuencia trimestral, respaldo)
+      CHILE:
+        nombre: IMCE Comercio (BCCh)
+        fuentes:
+          - {tipo: bcch_siete, cuadro: CAP_BDP/MN_EXP_EC11/EXE_IMCE_TOTAL, fila: "IMCE: ?Comercio", transform: nivel}
+      COLOMBIA:
+        nombre: ICCO (Fedesarrollo, EOE) normalizado (X+100)/2
+        fuentes:
+          - tipo: archivo_web
+            clave: fedesarrollo_eoe
+            etiqueta: Fedesarrollo EOE
+            pagina: https://www.repository.fedesarrollo.org.co/handle/11445/37
+            saltos: ['/handle/11445/\d{4,}']
+            patron_enlace: '/bitstream/[^"\x27]+\.xlsx'
+            fila_regex: 'confianza comercial|icco'
+            transform: "formula:(x+100)/2"
+          - {tipo: noticia_dato, consulta: "Fedesarrollo confianza comercial", pais: CO, patron: "confianza comercial|ICCO", unidad: auto, rango: [-60, 80], transform: "formula:(x+100)/2"}
+      MEXICO:
+        nombre: Indicador de Confianza Empresarial (INEGI)
+        fuentes:
+          # El histórico calza con Industrias manufactureras en CIFRAS ORIGINALES (abr-25 48.7, abr-26 48.3)
+          - {tipo: inegi, buscar: "indicador de confianza empresarial industrias manufactureras", titulo_regex: "confianza empresarial.*manufactur", excluir_regex: "desestacionaliz|tendencia|componente|momento|situaci|expectativ|variaci", transform: nivel, requiere: INEGI_TOKEN}
+          - {tipo: inegi, buscar: "indicador de confianza empresarial industrias manufactureras serie desestacionalizada", titulo_regex: "confianza empresarial.*manufactur.*desestacionaliz", excluir_regex: "componente|momento|situaci|expectativ|variaci", transform: nivel, requiere: INEGI_TOKEN}
+      PERU:
+        nombre: Expectativas del sector a 12 meses (BCRP)
+        fuentes:
+          - {tipo: bcrp, codigo: PD39752AM, transform: nivel}
+
+  # ---------------------------------------------------------------------------
+  4_Confianza_Consumidor:
+    alias: ConfCons
+    validacion: {mad_max: 1.5, rango: [0, 100]}
+    series:
+      BRASIL:
+        nombre: Índice de Confiança do Consumidor (BCB SGS 4393, Fecomercio) normalizado X/2
+        fuentes:
+          - {tipo: bcb_sgs, codigo: 4393, transform: "formula:x/2"}
+      CHILE:
+        nombre: Índice de Confianza del Consumidor Ipsos (BCCh)
+        fuentes:
+          - {tipo: bcch_siete, cuadro: CAP_EXP_ECO/MN_EXP_EC11/IPSOS_ICC_M/638427307428609836, fila: "^Indice de confianza del consumidor", transform: nivel}
+      COLOMBIA:
+        nombre: ICC (Fedesarrollo, EOC) normalizado (X+100)/2
+        fuentes:
+          - tipo: archivo_web
+            clave: fedesarrollo_eoc
+            etiqueta: Fedesarrollo EOC
+            pagina: https://www.repository.fedesarrollo.org.co/handle/11445/36
+            saltos: ['/handle/11445/\d{4,}']
+            patron_enlace: '/bitstream/[^"\x27]+\.xlsx'
+            fila_regex: 'confianza del consumidor|^icc$'
+            excluir_regex: 'expectativ|condiciones'
+            transform: "formula:(x+100)/2"
+          - {tipo: noticia_dato, consulta: "Fedesarrollo confianza del consumidor", pais: CO, patron: "confianza del consumidor|ICC", unidad: auto, rango: [-60, 60], transform: "formula:(x+100)/2"}
+      MEXICO:
+        nombre: Indicador de Confianza del Consumidor (INEGI-Banxico)
+        fuentes:
+          - {tipo: inegi, id: "454186", transform: nivel, requiere: INEGI_TOKEN}   # verificado: calza con el histórico
+          - tipo: texto_web            # sin token: boletín mensual del INEGI
+            clave: inegi_icc_bol
+            etiqueta: INEGI ICC (boletín)
+            plantilla_url: 'https://www.inegi.org.mx/contenidos/saladeprensa/boletines/{anio}/enco/icc{anio}_{mm}.pdf'
+            nombre_por: publicacion
+            rezago: 1
+            meses_atras: 8
+            patron: 'Indicador de Confianza del Consumidor'
+            unidad: puntos
+            rango: [20, 80]
+            transform: nivel
+          - {tipo: inegi, buscar: "indicador de confianza del consumidor series originales", titulo_regex: "confianza del consumidor.*originales.*indicador de confianza del consumidor", transform: nivel, requiere: INEGI_TOKEN}
+
+  # ---------------------------------------------------------------------------
+  5_Inflacion:
+    alias: Infl
+    validacion: {mad_max: 0.003, rango: [-0.05, 0.4]}
+    series:
+      BRASIL:
+        nombre: IPCA acumulado 12 meses (IBGE vía BCB)
+        fuentes:
+          - {tipo: bcb_sgs, codigo: 13522, transform: pct}
+          - {tipo: bis, dataset: WS_LONG_CPI, clave: M.BR.771, transform: pct}
+      CHILE:
+        nombre: IPC General var. 12 meses (INE vía BCCh)
+        fuentes:
+          - {tipo: bcch_siete, cuadro: CAP_PRECIOS/MN_CAP_PRECIOS/IPC_VAR_ANUAL_HIST_NEW, fila: "^IPC General", transform: pct}
+          - {tipo: bis, dataset: WS_LONG_CPI, clave: M.CL.771, transform: pct}
+      COLOMBIA:
+        nombre: IPC total var. anual (DANE)
+        fuentes:
+          - tipo: archivo_web
+            clave: dane_ipc
+            etiqueta: DANE IPC (anexo índices)
+            pagina: https://www.dane.gov.co/index.php/estadisticas-por-tema/precios-y-costos/indice-de-precios-al-consumidor-ipc
+            patron_enlace: 'anex-IPC-Indices-[a-z]{3}\d{4}\.xlsx'
+            plantilla_url: 'https://www.dane.gov.co/files/operaciones/IPC/{mes}{anio}/anex-IPC-Indices-{mes}{anio}.xlsx'
+            fila_regex: 'indice|ipc|total'
+            transform: auto_yoy
+          - {tipo: bis, dataset: WS_LONG_CPI, clave: M.CO.771, transform: pct}
+      MEXICO:
+        nombre: INPC general var. anual (INEGI vía Banxico)
+        fuentes:
+          - {tipo: banxico, serie: SP1, transform: yoy, requiere: BANXICO_TOKEN}
+          - {tipo: bis, dataset: WS_LONG_CPI, clave: M.MX.771, transform: pct}
+      PERU:
+        nombre: IPC Lima Metropolitana var. 12 meses (BCRP)
+        fuentes:
+          - {tipo: bcrp, codigo: PN01273PM, transform: pct}
+          - {tipo: bis, dataset: WS_LONG_CPI, clave: M.PE.771, transform: pct}
+      ESTADOS UNIDOS:
+        nombre: CPI-U all items NSA, var. 12 meses (BLS vía FRED)
+        fuentes:
+          - {tipo: fred, codigo: CPIAUCNSL, transform: yoy}
+          - {tipo: bis, dataset: WS_LONG_CPI, clave: M.US.771, transform: pct}
+
+  # ---------------------------------------------------------------------------
+  6_ANTAD:
+    alias: ANTAD
+    validacion: {mad_max: 0.015, rango: [-0.5, 0.6]}
+    series:
+      OVERALL:
+        nombre: ANTAD ventas a tiendas iguales, total (nominal)
+        fuentes:
+          - {tipo: noticia_dato, consulta: "ANTAD ventas tiendas iguales", pais: MX, patron: "tiendas iguales", rango: [-30, 40], transform: pct}
+      AUTOSERVICIO:
+        nombre: ANTAD autoservicio, tiendas iguales
+        fuentes: []        # ANTAD no publica los segmentos en formato descargable: usar data/manual_inputs.csv
+      DEPARTAMENTAL:
+        nombre: ANTAD departamentales, tiendas iguales
+        fuentes: []
+      ESPECIALIZADAS:
+        nombre: ANTAD especializadas, tiendas iguales
+        fuentes: []
+
+  # ---------------------------------------------------------------------------
+  7_TPM's:
+    alias: TPM
+    validacion: {mad_max: 0.0026, rango: [0, 0.5]}
+    series:
+      BRASIL:
+        nombre: Meta Selic (BCB), fin de mes
+        fuentes:
+          - {tipo: bcb_sgs, codigo: 432, transform: pct, agregacion: last}
+          - {tipo: bis, dataset: WS_CBPOL, clave: M.BR, transform: pct}
+      CHILE:
+        nombre: TPM (BCCh), fin de mes
+        fuentes:
+          - {tipo: bis, dataset: WS_CBPOL, clave: M.CL, transform: pct}
+          - {tipo: bcch_api, codigo: F022.TPM.TIN.D001.NO.Z.D, transform: pct, agregacion: last, requiere: BCCH_TOKEN}
+      COLOMBIA:
+        nombre: Tasa de política monetaria (BanRep), fin de mes
+        fuentes:
+          - {tipo: bis, dataset: WS_CBPOL, clave: M.CO, transform: pct}
+      MEXICO:
+        nombre: Tasa objetivo (Banxico), fin de mes
+        fuentes:
+          - {tipo: banxico, serie: SF61745, transform: pct, agregacion: last, requiere: BANXICO_TOKEN}
+          - {tipo: bis, dataset: WS_CBPOL, clave: M.MX, transform: pct}
+      PERU:
+        nombre: Tasa de referencia (BCRP)
+        fuentes:
+          - {tipo: bcrp, codigo: PD04722MM, transform: pct}
+          - {tipo: bis, dataset: WS_CBPOL, clave: M.PE, transform: pct}
+      ESTADOS UNIDOS:
+        nombre: Federal Funds Effective Rate, promedio mensual (FRED FEDFUNDS)
+        fuentes:
+          - {tipo: fred, codigo: FEDFUNDS, transform: pct}

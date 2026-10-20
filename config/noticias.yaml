@@ -1,0 +1,72 @@
+# =============================================================================
+#  Hoja "Noticias": titulares recientes que explican la variación por país
+# =============================================================================
+#  Por cada país se consultan titulares de Google News (RSS público, sin API key)
+#  para cada indicador. `filtro` es una expresión regular que debe aparecer en el
+#  titular/resumen para que cuente (evita ruido). Se toman los `max_por_indicador`
+#  más recientes de los últimos `dias`.
+#
+#  `feeds` permite añadir RSS oficiales (bancos centrales, institutos).
+# =============================================================================
+dias: 45
+max_por_indicador: 3
+
+paises:
+  BRASIL:
+    idioma: pt-BR
+    pais: BR
+    indicadores:
+      Actividad: {consulta: "IBC-Br Banco Central", filtro: "IBC-?Br|atividade econ"}
+      Ventas Retail: {consulta: "vendas varejo IBGE PMC", filtro: "varejo|vendas"}
+      Confianza Empresarial: {consulta: "ICEI CNI confiança empresário industrial", filtro: "ICEI|confian"}
+      Confianza Consumidor: {consulta: "confiança do consumidor", filtro: "confian.*consumidor"}
+      Inflación: {consulta: "IPCA inflação IBGE", filtro: "IPCA|infla"}
+      TPM: {consulta: "Copom Selic", filtro: "Selic|Copom"}
+  CHILE:
+    idioma: es-419
+    pais: CL
+    indicadores:
+      Actividad: {consulta: "Imacec Banco Central", filtro: "imacec"}
+      Ventas Retail: {consulta: "INE índice de actividad del comercio", filtro: "comercio|ventas"}
+      Confianza Empresarial: {consulta: "IMCE confianza empresarial Chile", filtro: "IMCE|confianza empresarial"}
+      Confianza Consumidor: {consulta: "Ipsos confianza del consumidor Chile", filtro: "confianza.*consumidor|IPEC"}
+      Inflación: {consulta: "IPC INE Chile inflación", filtro: "IPC|inflaci"}
+      TPM: {consulta: "Banco Central de Chile tasa de política monetaria", filtro: "tasa|TPM"}
+  COLOMBIA:
+    idioma: es-419
+    pais: CO
+    indicadores:
+      Actividad: {consulta: "ISE DANE indicador de seguimiento economía", filtro: "ISE|seguimiento|econom"}
+      Ventas Retail: {consulta: "DANE comercio minorista ventas", filtro: "comercio|ventas|minorista"}
+      Confianza Empresarial: {consulta: "Fedesarrollo confianza comercial industrial", filtro: "confianza (comercial|industrial)"}
+      Confianza Consumidor: {consulta: "Fedesarrollo confianza del consumidor", filtro: "confianza del consumidor"}
+      Inflación: {consulta: "inflación Colombia DANE IPC", filtro: "inflaci|IPC"}
+      TPM: {consulta: "Banco de la República tasas de interés junta", filtro: "tasa|Banco de la Rep"}
+  MEXICO:
+    idioma: es-419
+    pais: MX
+    indicadores:
+      Actividad: {consulta: "IGAE INEGI actividad económica", filtro: "IGAE|actividad econ"}
+      Ventas Retail: {consulta: "ventas minoristas INEGI", filtro: "minorist|menudeo|al por menor"}
+      ANTAD: {consulta: "ANTAD tiendas iguales", filtro: "ANTAD"}
+      Confianza Empresarial: {consulta: "INEGI confianza empresarial", filtro: "confianza empresarial"}
+      Confianza Consumidor: {consulta: "INEGI confianza del consumidor", filtro: "confianza del consumidor"}
+      Inflación: {consulta: "inflación México INEGI INPC", filtro: "inflaci|INPC"}
+      TPM: {consulta: "Banxico tasa de interés decisión", filtro: "Banxico|tasa"}
+  PERU:
+    idioma: es-419
+    pais: PE
+    indicadores:
+      Actividad: {consulta: "INEI producción nacional economía peruana creció", filtro: "producci|econom|PBI"}
+      Confianza Empresarial: {consulta: "BCRP expectativas empresariales", filtro: "expectativ"}
+      Inflación: {consulta: "inflación Lima Metropolitana BCRP", filtro: "inflaci|precios"}
+      TPM: {consulta: "BCRP tasa de referencia", filtro: "tasa|BCR"}
+  ESTADOS UNIDOS:
+    idioma: en-US
+    pais: US
+    indicadores:
+      Inflación: {consulta: "CPI inflation BLS", filtro: "CPI|inflation"}
+      TPM: {consulta: "Federal Reserve rate decision FOMC", filtro: "Fed|FOMC|rate"}
+
+feeds:
+  - {pais: ESTADOS UNIDOS, indicador: TPM, nombre: "Federal Reserve (comunicados de política monetaria)", url: "https://www.federalreserve.gov/feeds/press_monetary.xml"}

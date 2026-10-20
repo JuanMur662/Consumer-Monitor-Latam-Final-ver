@@ -1,0 +1,13 @@
+# Dependencias del Monitor Retail LATAM (se instalan solas con setup.bat)
+requests>=2.31,<3
+pandas>=2.0,<3
+numpy>=1.24,<3
+lxml>=4.9
+beautifulsoup4>=4.12,<5
+openpyxl>=3.1,<4        # leer los Excel que publican DANE / INE / CNI / Fedesarrollo
+xlrd>=2.0.1,<3          # leer .xls antiguos (DANE)
+pypdf>=4.0,<7           # leer el texto de boletines PDF (INEGI, DANE, CNI)
+PyYAML>=6.0,<7
+python-dotenv>=1.0,<2
+truststore>=0.9 ; python_version >= "3.10"   # certificados del sistema (redes corporativas)
+pytest>=7.4
